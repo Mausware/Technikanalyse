@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update sys_domain="global" table="sys_script">
+    <sys_script action="INSERT_OR_UPDATE">
+        <abort_action>false</abort_action>
+        <access>package_private</access>
+        <action_delete>false</action_delete>
+        <action_insert>true</action_insert>
+        <action_query>false</action_query>
+        <action_update>true</action_update>
+        <active>true</active>
+        <add_message>false</add_message>
+        <advanced>true</advanced>
+        <change_fields>false</change_fields>
+        <client_callable>false</client_callable>
+        <collection>x_sigh_technik_dotwalkanalyse</collection>
+        <condition/>
+        <description/>
+        <execute_function>false</execute_function>
+        <filter_condition table="x_sigh_technik_dotwalkanalyse">u_analyzed_scheduled_scriptISNOTEMPTY^ORu_analyzed_script_includeISNOTEMPTY^ORu_analyzed_business_ruleISNOTEMPTY^ORu_analyzed_client_scriptISNOTEMPTY^EQ<item endquery="false" field="u_analyzed_scheduled_script" goto="false" newquery="false" operator="ISNOTEMPTY" or="false" value=""/>
+            <item endquery="false" field="u_analyzed_script_include" goto="false" newquery="false" operator="ISNOTEMPTY" or="true" value=""/>
+            <item endquery="false" field="u_analyzed_business_rule" goto="false" newquery="false" operator="ISNOTEMPTY" or="true" value=""/>
+            <item endquery="false" field="u_analyzed_client_script" goto="false" newquery="false" operator="ISNOTEMPTY" or="true" value=""/>
+            <item endquery="true" field="" goto="false" newquery="false" operator="=" or="false" value=""/>
+        </filter_condition>
+        <is_rest>false</is_rest>
+        <message/>
+        <name>Populate Analyzed Element field</name>
+        <order>100</order>
+        <priority>100</priority>
+        <rest_method/>
+        <rest_method_text/>
+        <rest_service/>
+        <rest_service_text/>
+        <rest_variables/>
+        <role_conditions/>
+        <script><![CDATA[(function executeRule(current, previous /*null when async*/) {
+
+	// Add your code here
+	var url = 'ERROR';
+	
+	if(current.u_analyzed_client_script != ''){
+		url = 'nav_to.do?uri=%2Fsys_script_client.do%3Fsys_id%3D' + current.u_analyzed_client_script;
+	}else if(current.u_analyzed_business_rule != ''){
+		url = 'nav_to.do?uri=%2Fsys_script.do%3Fsys_id%3D' + current.u_analyzed_business_rule;
+	}else if(current.u_analyzed_script_include != ''){
+		url = 'sys_script_include.do?sys_id=' + current.u_analyzed_script_include;
+	}else if(current.u_analyzed_scheduled_script != ''){
+		url = 'nav_to.do?uri=%2Fsysauto_script.do%3Fsys_id%3D' + current.u_analyzed_scheduled_script;
+	}
+	
+	current.u_analyzed_element = url;
+
+	
+
+})(current, previous);]]></script>
+        <sys_class_name>sys_script</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2018-04-25 12:00:38</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>d7f27d3b4fa11300b1350fbf9310c720</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Populate Analyzed Element field</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Technikanalyse" source="x_sigh_technik">ca8ead33dbedd700a9c066a25b961937</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Technikanalyse">ca8ead33dbedd700a9c066a25b961937</sys_scope>
+        <sys_update_name>sys_script_d7f27d3b4fa11300b1350fbf9310c720</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2018-04-25 12:00:38</sys_updated_on>
+        <template/>
+        <when>before</when>
+    </sys_script>
+    <sys_translated_text action="delete_multiple" query="documentkey=d7f27d3b4fa11300b1350fbf9310c720"/>
+</record_update>

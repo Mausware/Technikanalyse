@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_sigh_technik.TestingUtil</api_name>
+        <client_callable>false</client_callable>
+        <description>A util for testing the Technikanalyse functions</description>
+        <name>TestingUtil</name>
+        <script><![CDATA[var TestingUtil = Class.create();
+TestingUtil.prototype = {
+	initialize: function() {
+	},
+
+	_dotwalkanalyseTabelleLeeren: function(){
+		var cleanUp = new GlideRecord('x_sigh_technik_dotwalkanalyse'); 
+		cleanUp.deleteMultiple();
+	},
+
+	_runDotwalkanalyseClientscripts: function() {
+
+		var gr = new GlideRecord('sys_script_client'); var scripttype = 'client';
+		
+		//gr.addQuery('script', 'CONTAINS', 'GlideRecord');
+		gr.orderByDesc('name');
+		gr.query();
+
+		var count = 1;
+
+		while(gr.next()){
+			str = gr.script;
+			scriptsysid = gr.sys_id;
+
+			var util = new x_sigh_technik.AnalyseUtils().getGlideRecVariableAndTable(str, "= new GlideRecord(", scriptsysid, scripttype);
+
+			for(var i = 0; i < util.length; i++){
+				var test = new x_sigh_technik.AnalyseUtils().getDotwalkTables(str, util[i].varName, util[i].tableName, scriptsysid, util[i].scripttype);
+
+				for(var j = 0; j < test.length; j++){
+
+					var grUp = new GlideRecord('x_sigh_technik_dotwalkanalyse');
+					if(test[j].scripttype == 'client'){
+						grUp.addQuery('u_analyzed_client_script', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'BR'){
+						grUp.addQuery('u_analyzed_business_rule', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'scriptinclude'){
+						grUp.addQuery('u_analyzed_script_include', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'scheduledscript'){
+						grUp.addQuery('u_analyzed_scheduled_script', test[j].scriptsysid);
+					}
+					grUp.addQuery('u_varname', test[j].varName);
+					grUp.query();
+
+					if(grUp.next()){
+						grUp.u_original_varname = test[j].origVar;
+						grUp.u_table = test[j].tableName;
+						grUp.u_fieldname = test[j].fieldName;
+						grUp.u_referenced_table = test[j].refTableName;
+						grUp.update();
+					}else{
+						grUp.initialize();
+						grUp.u_varname = test[j].varName;
+
+						//Unterscheidung nach Scripttyp
+						if(test[j].scripttype == 'client'){
+							grUp.u_analyzed_client_script = test[j].scriptsysid;
+						}else if(test[j].scripttype == 'BR'){
+							grUp.u_analyzed_business_rule = test[j].scriptsysid;
+						}else if(test[j].scripttype == 'scriptinclude'){
+							grUp.u_analyzed_script_include = test[j].scriptsysid;
+						}
+						grUp.u_original_varname = test[j].origVar;
+						grUp.u_table = test[j].tableName;
+						grUp.u_fieldname = test[j].fieldName;
+						grUp.u_referenced_table = test[j].refTableName;
+						grUp.insert();
+					}
+				}
+			}
+		}
+
+	},
+
+	_runDotwalkanalyseBRs: function() {
+
+		var gr = new GlideRecord('sys_script'); var scripttype = 'BR';
+
+		//gr.addQuery('script', 'CONTAINS', 'GlideRecord');
+		gr.orderByDesc('name');
+		gr.query();
+
+		var count = 1;
+
+		while(gr.next()){
+			str = gr.script;
+			scriptsysid = gr.sys_id;
+
+			var util = new x_sigh_technik.AnalyseUtils().getGlideRecVariableAndTable(str, "= new GlideRecord(", scriptsysid, scripttype);
+
+			for(var i = 0; i < util.length; i++){
+				var test = new x_sigh_technik.AnalyseUtils().getDotwalkTables(str, util[i].varName, util[i].tableName, scriptsysid, util[i].scripttype);
+
+				for(var j = 0; j < test.length; j++){
+
+					var grUp = new GlideRecord('x_sigh_technik_dotwalkanalyse');
+					if(test[j].scripttype == 'client'){
+						grUp.addQuery('u_analyzed_client_script', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'BR'){
+						grUp.addQuery('u_analyzed_business_rule', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'scriptinclude'){
+						grUp.addQuery('u_analyzed_script_include', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'scheduledscript'){
+						grUp.addQuery('u_analyzed_scheduled_script', test[j].scriptsysid);
+					}
+
+					grUp.addQuery('u_varname', test[j].varName);
+					grUp.query();
+
+					if(grUp.next()){
+						grUp.u_original_varname = test[j].origVar;
+						grUp.u_table = test[j].tableName;
+						grUp.u_fieldname = test[j].fieldName;
+						grUp.u_referenced_table = test[j].refTableName;
+						grUp.update();
+					}else{
+						grUp.initialize();
+						grUp.u_varname = test[j].varName;
+
+						//Unterscheidung nach Scripttyp
+						if(test[j].scripttype == 'client'){
+							grUp.u_analyzed_client_script = test[j].scriptsysid;
+						}else if(test[j].scripttype == 'BR'){
+							grUp.u_analyzed_business_rule = test[j].scriptsysid;
+						}else if(test[j].scripttype == 'scriptinclude'){
+							grUp.u_analyzed_script_include = test[j].scriptsysid;
+						}
+						grUp.u_original_varname = test[j].origVar;
+						grUp.u_table = test[j].tableName;
+						grUp.u_fieldname = test[j].fieldName;
+						grUp.u_referenced_table = test[j].refTableName;
+						grUp.insert();
+					}
+				}
+			}
+		}
+
+	},
+
+	_runDotwalkanalyseScriptincludes: function() {
+		
+gs.info('SCHEDMMA: _runDotwalkanalyseScriptincludes has been called');
+
+		var gr = new GlideRecord('sys_script_include'); var scripttype = 'scriptinclude';
+		gr.addQuery('sys_id', '!=', '7d6a356d4f251300b1350fbf9310c76c'); //Schließe das TestingUtil Script von der Analyse Include aus
+
+		//gr.addQuery('script', 'CONTAINS', 'GlideRecord');
+		gr.orderByDesc('name');
+		gr.query();
+
+		var count = 1;
+
+		while(gr.next()){
+			
+			var str = gr.script;
+			var scriptsysid = gr.sys_id;
+			gs.info('SCHEDMMA: Found some Script includes. Currently working on ' + gr.sys_id);
+
+			var util = new x_sigh_technik.AnalyseUtils().getGlideRecVariableAndTable(str, "= new GlideRecord(", scriptsysid, scripttype);
+
+			for(var i = 0; i < util.length; i++){
+				gs.info('SCHEDMMA: Calling getDotwalkTables() with params:\nvarName='+util[i].varName+'\ntableName='+util[i].tableName+'\nscriptsysid='+scriptsysid+'\nscripttype='+util[i].scripttype);
+				var test = new x_sigh_technik.AnalyseUtils().getDotwalkTables(str, util[i].varName, util[i].tableName, scriptsysid, util[i].scripttype);
+
+				for(var j = 0; j < test.length; j++){
+
+					var grUp = new GlideRecord('x_sigh_technik_dotwalkanalyse');
+					if(test[j].scripttype == 'client'){
+						grUp.addQuery('u_analyzed_client_script', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'BR'){
+						grUp.addQuery('u_analyzed_business_rule', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'scriptinclude'){
+						grUp.addQuery('u_analyzed_script_include', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'scheduledscript'){
+						grUp.addQuery('u_analyzed_scheduled_script', test[j].scriptsysid);
+					}
+
+					grUp.addQuery('u_varname', test[j].varName);
+					grUp.query();
+
+					if(grUp.next()){
+						gs.info('SCHEDMMA: updating Record in Dotwalkanalyse. RecordID = ' + grUp.sys_id);
+						grUp.u_original_varname = test[j].origVar;
+						grUp.u_table = test[j].tableName;
+						grUp.u_fieldname = test[j].fieldName;
+						grUp.u_referenced_table = test[j].refTableName;
+						grUp.update();
+					}else{
+						gs.info('SCHEDMMA: inserting Record in Dotwalkanalyse. RecordID = ' + grUp.sys_id);
+						grUp.initialize();
+						grUp.u_varname = test[j].varName;
+
+						//Unterscheidung nach Scripttyp
+						if(test[j].scripttype == 'client'){
+							grUp.u_analyzed_client_script = test[j].scriptsysid;
+						}else if(test[j].scripttype == 'BR'){
+							grUp.u_analyzed_business_rule = test[j].scriptsysid;
+						}else if(test[j].scripttype == 'scriptinclude'){
+							grUp.u_analyzed_script_include = test[j].scriptsysid;
+						}
+						grUp.u_original_varname = test[j].origVar;
+						grUp.u_table = test[j].tableName;
+						grUp.u_fieldname = test[j].fieldName;
+						grUp.u_referenced_table = test[j].refTableName;
+						grUp.insert();
+					}
+				}
+			}
+		}
+
+	},
+
+	_runDotwalkanalyseScheduledScripts: function() {
+		
+		gs.info('SCHEDMMA: Started running x_sigh_technik.TestingUtil()._runDotwalkanalyseScheduledScripts');
+
+		var gr = new GlideRecord('sysauto_script'); var scripttype = 'scheduledscript';
+
+		//gr.addQuery('script', 'CONTAINS', 'GlideRecord');
+		gr.orderByDesc('name');
+		gr.query();
+
+		var count = 1;
+
+		while(gr.next()){
+			
+			var str = gr.script;
+			var scriptsysid = gr.sys_id;
+			gs.info('SCHEDMMA: Found scheduled scripts to analyze. ScriptID is ' + gr.sys_id);
+
+			var util = new x_sigh_technik.AnalyseUtils().getGlideRecVariableAndTable(str, "= new GlideRecord(", scriptsysid, scripttype);
+
+			for(var i = 0; i < util.length; i++){
+				var test = new x_sigh_technik.AnalyseUtils().getDotwalkTables(str, util[i].varName, util[i].tableName, scriptsysid, util[i].scripttype);
+
+				for(var j = 0; j < test.length; j++){
+
+					var grUp = new GlideRecord('x_sigh_technik_dotwalkanalyse');
+					if(test[j].scripttype == 'client'){
+						grUp.addQuery('u_analyzed_client_script', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'BR'){
+						grUp.addQuery('u_analyzed_business_rule', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'scriptinclude'){
+						grUp.addQuery('u_analyzed_script_include', test[j].scriptsysid);
+					}else if(test[j].scripttype == 'scheduledscript'){
+						grUp.addQuery('u_analyzed_scheduled_script', test[j].scriptsysid);
+					}
+
+					grUp.addQuery('u_varname', test[j].varName);
+					grUp.query();
+
+					if(grUp.next()){
+						grUp.u_original_varname = test[j].origVar;
+						grUp.u_table = test[j].tableName;
+						grUp.u_fieldname = test[j].fieldName;
+						grUp.u_referenced_table = test[j].refTableName;
+						grUp.update();
+					}else{
+						grUp.initialize();
+						grUp.u_varname = test[j].varName;
+
+						//Unterscheidung nach Scripttyp
+						if(test[j].scripttype == 'client'){
+							grUp.u_analyzed_client_script = test[j].scriptsysid;
+						}else if(test[j].scripttype == 'BR'){
+							grUp.u_analyzed_business_rule = test[j].scriptsysid;
+						}else if(test[j].scripttype == 'scriptinclude'){
+							grUp.u_analyzed_script_include = test[j].scriptsysid;
+						}else if(test[j].scripttype == 'scheduledscript'){
+							grUp.u_analyzed_scheduled_script = test[j].scriptsysid;
+						}
+						grUp.u_original_varname = test[j].origVar;
+						grUp.u_table = test[j].tableName;
+						grUp.u_fieldname = test[j].fieldName;
+						grUp.u_referenced_table = test[j].refTableName;
+						grUp.insert();
+					}
+				}
+			}
+		}
+
+	},
+
+
+	type: 'TestingUtil'
+};]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2018-04-25 12:07:13</sys_created_on>
+        <sys_id>1a84fd7b4fa11300b1350fbf9310c7c6</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>TestingUtil</sys_name>
+        <sys_package display_value="Technikanalyse" source="x_sigh_technik">ca8ead33dbedd700a9c066a25b961937</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="Technikanalyse">ca8ead33dbedd700a9c066a25b961937</sys_scope>
+        <sys_update_name>sys_script_include_1a84fd7b4fa11300b1350fbf9310c7c6</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2018-04-25 12:39:16</sys_updated_on>
+    </sys_script_include>
+</record_update>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update sys_domain="global" table="sys_script_client">
+    <sys_script_client action="INSERT_OR_UPDATE">
+        <active>true</active>
+        <applies_extended>false</applies_extended>
+        <condition/>
+        <description>Script used to test the dotwalk detection functionality</description>
+        <field>active</field>
+        <global>true</global>
+        <messages/>
+        <name>Testscript for GlideRecord Detection</name>
+        <order/>
+        <script><![CDATA[function onLoad() {
+   //Type appropriate comment here, and begin script below
+	if(1){
+		return;
+	}
+	
+   var gr = new GlideRecord('sys_user');
+	var bro = new GlideRecord('sys_user_group');
+	gr.query();
+	
+	if(gr.next()){
+		
+		var building = gr.building;
+		var whatever = gr.building.location.company;
+		var contact = gr.company.contact;
+		
+		bro.query();
+		if(bro.next()){ 
+			var costcenter = bro.cost_center;
+			
+			
+		}
+	}
+}]]></script>
+        <sys_class_name>sys_script_client</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2018-04-25 12:10:24</sys_created_on>
+        <sys_domain>global</sys_domain>
+        <sys_domain_path>/</sys_domain_path>
+        <sys_id>b1853dbb4fa11300b1350fbf9310c711</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Testscript for GlideRecord Detection</sys_name>
+        <sys_overrides/>
+        <sys_package display_value="Technikanalyse" source="x_sigh_technik">ca8ead33dbedd700a9c066a25b961937</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Technikanalyse">ca8ead33dbedd700a9c066a25b961937</sys_scope>
+        <sys_update_name>sys_script_client_b1853dbb4fa11300b1350fbf9310c711</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2018-04-25 12:10:24</sys_updated_on>
+        <table>sys_user</table>
+        <type>onLoad</type>
+        <ui_type>0</ui_type>
+        <view/>
+    </sys_script_client>
+</record_update>

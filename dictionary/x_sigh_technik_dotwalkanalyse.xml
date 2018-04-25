@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database>
+    <element label="Dotwalkanalyse" max_length="40" name="x_sigh_technik_dotwalkanalyse" type="collection">
+        <element label="analyzed Business Rule" max_length="32" name="u_analyzed_business_rule" reference="sys_script" type="reference"/>
+        <element label="analyzed Client Script" max_length="32" name="u_analyzed_client_script" reference="sys_script_client" type="reference"/>
+        <element label="Analyzed Element" max_length="1024" name="u_analyzed_element" type="url"/>
+        <element label="Analyzed Scheduled Script" max_length="32" name="u_analyzed_scheduled_script" reference="sysauto_script" type="reference"/>
+        <element label="Analyzed script include" max_length="32" name="u_analyzed_script_include" reference="sys_script_include" type="reference"/>
+        <element label="Fieldname" max_length="256" name="u_fieldname" type="string"/>
+        <element label="original Varname" max_length="256" name="u_original_varname" type="string"/>
+        <element label="Referenced Table" max_length="256" name="u_referenced_table" type="string"/>
+        <element label="Table" max_length="256" name="u_table" type="string"/>
+        <element label="varname" max_length="256" name="u_varname" type="string"/>
+        <index name="index">
+            <element name="u_analyzed_script_include"/>
+        </index>
+        <index name="index2">
+            <element name="u_analyzed_scheduled_script"/>
+        </index>
+        <index name="index3">
+            <element name="u_analyzed_business_rule"/>
+        </index>
+        <index name="index4">
+            <element name="u_analyzed_client_script"/>
+        </index>
+    </element>
+</database>

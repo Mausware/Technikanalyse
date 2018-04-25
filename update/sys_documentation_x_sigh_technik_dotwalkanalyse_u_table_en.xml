@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update>
+    <sys_documentation element="u_table" label="Table" language="en" table="x_sigh_technik_dotwalkanalyse">
+        <sys_documentation action="INSERT_OR_UPDATE">
+            <element>u_table</element>
+            <help/>
+            <hint/>
+            <label>Table</label>
+            <language>en</language>
+            <name>x_sigh_technik_dotwalkanalyse</name>
+            <plural>Tables</plural>
+            <sys_class_name>sys_documentation</sys_class_name>
+            <sys_created_by>admin</sys_created_by>
+            <sys_created_on>2018-04-25 11:57:37</sys_created_on>
+            <sys_id>42b2353b4fa11300b1350fbf9310c7e7</sys_id>
+            <sys_mod_count>0</sys_mod_count>
+            <sys_name>Table</sys_name>
+            <sys_package display_value="Technikanalyse" source="x_sigh_technik">ca8ead33dbedd700a9c066a25b961937</sys_package>
+            <sys_policy/>
+            <sys_scope display_value="Technikanalyse">ca8ead33dbedd700a9c066a25b961937</sys_scope>
+            <sys_update_name>sys_documentation_x_sigh_technik_dotwalkanalyse_u_table_en</sys_update_name>
+            <sys_updated_by>admin</sys_updated_by>
+            <sys_updated_on>2018-04-25 11:57:37</sys_updated_on>
+            <url/>
+            <url_target/>
+        </sys_documentation>
+    </sys_documentation>
+</record_update>

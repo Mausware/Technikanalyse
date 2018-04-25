@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_sigh_technik.AnalyseUtils</api_name>
+        <client_callable>true</client_callable>
+        <description/>
+        <name>AnalyseUtils</name>
+        <script><![CDATA[var AnalyseUtils = Class.create();
+AnalyseUtils.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
+
+	getReferencingTables: function(tablename){
+		//returns all Tables that have a reference for the table specified in parameter tablename
+		//tablename = 'sys_user';
+
+		referencingTablesArr = [];
+		var tables = new GlideRecord('sys_db_object');
+		tables.query();
+
+		//gs.info('Number of Records in sys_db_object: ' + tables.getRowCount());
+
+		while(tables.next()){
+
+			table2scan = tables.name.toString();
+
+			var gr = new GlideRecord('sys_dictionary');
+			gr.addQuery('name', table2scan);
+			gr.addQuery('internal_type', 'reference');
+			gr.query();
+
+			if(gr.getRowCount() != 0){
+				//gs.info('Number of Rercords with type=reference in table ' + table2scan + ': ' + gr.getRowCount());
+
+				while(gr.next()){
+
+					referencedTable = gr.reference;
+
+					//Ist der Name der referenzierten Tabelle gleich dem Namen unserer zu untersuchenden Tabelle?
+					if(tablename == referencedTable){
+						//gs.info('Referenz = ' + referencedTable + ' in Table ' + table2scan);
+
+						//Ist der Tabellenname noch nicht im Array der referenzierenden Tabellen...
+						if(referencingTablesArr.indexOf(table2scan) == -1){
+							//...dann lege ihn hinein
+							referencingTablesArr.push(table2scan);
+						}
+					}
+				}
+			}
+		}
+		//gs.info('Array: ' + referencingTablesArr);
+		//gs.info('Length of Array: ' + referencingTablesArr.length);
+		return referencingTablesArr;
+	},
+
+	getClientScriptsRunningOnTable : function(tablename){
+		//returns all Client Scripts that are running on the table specified in parameter tablename
+		//tablename = 'sys_user';
+
+		var arr = [];
+
+		var scripts = new GlideRecord('sys_script_client');
+		scripts.query();
+
+		//gs.info("Number of Records: " + scripts.getRowCount());
+
+		while(scripts.next()){
+
+			if(scripts.table.toString() == tablename){
+
+				//gs.info("Pushing Script -" + scripts.name.toString() + "- because it belongs to Table: " + scripts.table.toString());
+				arr.push(scripts.name.toString());
+
+			}
+
+		}
+
+		gs.info('Arr: ' + arr);
+		return arr;
+
+	},
+
+	getClientScriptsRunningOnField : function(tablename, fieldname){
+		//returns all Client Scripts that are running on the table and field specified in the parameters
+		//tablename = 'wf_workflow_version';
+		//fieldname = 'active';
+
+		var arr = [];
+
+		var scripts = new GlideRecord('sys_script_client');
+		scripts.query();
+
+		//gs.info("Number of Records: " + scripts.getRowCount());
+
+		while(scripts.next()){
+
+			//toDo: Hier scripts.type auf onChange OR onCellEdit einschränken? Sinnvoll?
+			if(scripts.table.toString() == tablename && scripts.field.toString() == fieldname){
+
+				//gs.info("Pushing Script -" + scripts.name.toString() + "- because it belongs to Table: " + scripts.table.toString() + " with Field -" + scripts.field.toString() + "-");
+				arr.push(scripts.name.toString());
+
+			}
+
+		}
+		return arr;
+
+
+	},
+
+	getClientScriptsWithGlideRecordRef : function(tablename){
+		//returns all Client Scripts that use a GlideRecord directly (without dotwalks) on the table specified in parameter tablename
+
+
+		var arr = [];
+
+		var scripts = new GlideRecord('sys_script_client');
+		scripts.query();
+
+		//gs.info("Number of Records: " + scripts.getRowCount());
+
+		var grTablename1 = "GlideRecord(\'"+tablename+"\')";
+		var grTablename2 = "GlideRecord(\""+tablename+"\")";
+
+		while(scripts.next()){
+			if( scripts.script.toString().includes(grTablename1) || scripts.script.toString().includes(grTablename2) ){
+				//gs.info("Pushing Script -" + scripts.name.toString() + "- because it belongs to Table: " + scripts.table.toString());
+				arr.push(scripts.name.toString());
+			}
+		}
+
+
+		//gs.info('Arr: ' + arr);
+		return arr;
+
+
+	},
+
+	findSubstringInArray : function(array, substring){
+		//Searches for occurances of substring in array. Returns an Array of <PositionInArray>.<PositionInElement>
+		//array[PositionInArray][PositionInElement] is the first letter of substring
+
+		retArr = [];
+
+		array.forEach(function(element, index) {
+			if(element.indexOf(substring) > -1){
+				//gs.info(index + "." + element.indexOf(substring));
+				retArr.push(index + "." + element.indexOf(substring));
+			}
+		});
+		return retArr;	
+	},
+
+	getGlideRecVariableAndTable: function(script, substring, scriptsysid, scripttype){		
+		//Expects a script string and a substring (normally "= new GlideRecord(" ).
+		//Returns an array of Objects. Each object contains a varName, a tableName and a scriptsysid
+		//varName = name of the glideRecord Variable (e.g. gr)
+		//tableName = name of the table the glideRecord is pointing at
+		//scriptsysid = sys_id of the script that has been analyzed
+		//scripttype = type of the script (Business Rule, Client Script, etc.)
+
+		//use with substring= "= new GlideRecord(" to get all GlideRecord Variables
+		var array = this.arrayfyScript(script);
+
+		var positions = this.findSubstringInArray(array, substring);
+		var retArr = [];
+
+
+		for(var i = 0; i < positions.length; i++){
+			var tempArr = positions[i].split('.');
+
+			tempArr[0] = parseInt(tempArr[0]);
+			tempArr[1] = parseInt(tempArr[1]);
+
+			//________________________________
+
+			//gs.info(array[tempArr[0]][tempArr[1]+substring.length+1]);
+			//gs.info(array[tempArr[0]][tempArr[1]+substring.length] + 'KEYWORDMAFA');
+
+			var r = 1;
+			var tablename = '';
+			var tablenameLetter = array[tempArr[0]][tempArr[1]+substring.length+r];
+			var tablenameLetterNext = array[tempArr[0]][tempArr[1]+substring.length+r+1];
+			var tablenameLetterPre = array[tempArr[0]][tempArr[1]+substring.length-1];
+			if(array[tempArr[0]][tempArr[1]+substring.length] == '\'' || array[tempArr[0]][tempArr[1]+substring.length] == '\"'){
+			//if(tablenameLetterPre == '('){
+				//while(tablenameLetter != "\"" && tablenameLetter != "\'"){
+				while(tablenameLetterNext != ')'){
+					tablename = tablename + tablenameLetter;
+					r++;
+					tablenameLetter = array[tempArr[0]][tempArr[1]+substring.length+r];
+					tablenameLetterNext = array[tempArr[0]][tempArr[1]+substring.length+r+1];
+				}
+				//gs.info("Tablename: " + tablename);
+
+				//________________________________
+
+
+				var j = 1;
+				var temptest = array[tempArr[0]][parseInt(tempArr[1])-j];
+
+				while(temptest == " " && j <= parseInt(tempArr[1])){
+					j++;
+					temptest = array[tempArr[0]][parseInt(tempArr[1])-j];
+				}
+
+				var lastPos = parseInt(tempArr[1])-j;
+
+
+				while(temptest != " " && temptest != ";" && temptest != "}" && temptest != "{" && temptest != "\n" && j <= parseInt(tempArr[1])){
+					j++;
+					temptest = array[tempArr[0]][parseInt(tempArr[1])-j];
+				}
+
+
+				var firstPos = parseInt(tempArr[1])-j+1;
+
+
+				var varName = [];
+				for(var k = firstPos; k <= lastPos; k++){
+
+					//varName.push(array[tempArr[0]][firstPos+k]);
+					varName = varName + array[tempArr[0]][k];
+				}
+
+				//varName =  varName.replace("\n", '');
+				varName =  varName.trim();
+
+				var obj = {
+					varName: varName,
+					tableName: tablename,
+					scriptsysid: scriptsysid,
+					scripttype: scripttype
+				};
+				//gs.info("varName am ENDE: " + varName);
+				retArr.push(obj);
+			}
+
+		}
+		return retArr;
+	},
+
+	getDotwalkTables: function(script, varName, tableName, scriptsysid, scripttype){
+		
+		
+
+
+		//Script contains the script to be analyzed
+		//varName contains the name of a glideRecord Variable with or without dotwalk (e.g. gr or gr.building)
+		//tableName contains the name of the table that the variable varName is pointing at (e.g. sys_user, cmn_location)
+		//scriptsysid is the sys_id of the script whose code is contained in 'script'
+		//Returns an Array of Objects. Each object contains attributes origVar, varName, tableName, fieldName, refTableName, scriptsysid
+		//origVar = original variable (so for gr.building.location it is gr)
+		//varName = complete variable name (e.g. gr.building.location)
+		//tableName = name of the table that 'varName' points at
+		//fieldName = name of the field used to dotwalk
+		//refTableName = name of the table that is referenced through varName.fieldName
+		//scriptsysid = sys_id of the analyzed script
+		//scripttype = type of the analyzed script (BR, Client, etc)
+
+		var scriptArray = [];
+		scriptArray = this.arrayfyScript(script);
+		var arr = [];
+
+
+		var retVal = [];
+
+
+		var result = this.findSubstringInArray(scriptArray, varName + ".");
+		
+		
+
+		var varNameLen = varName.length;
+		//			gs.info("Result: " + result);
+
+
+		result.forEach(function(element, index) {
+			var loc = result[index].split('.');
+
+			var dotwalkfieldname = '';
+
+			var j = 1;
+
+			var scriptPart = scriptArray[loc[0]][parseInt(loc[1]) + varNameLen + j];
+			var scriptPartLen = scriptArray[loc[0]].length;
+			
+			
+
+
+			while(scriptPart != ']' && scriptPart != ' ' && scriptPart != '.' && scriptPart != ';' && scriptPart != '(' && scriptPart != ')' && scriptPart != '+' && scriptPart != '<'  && (parseInt(loc[1]) + varNameLen + j) < scriptPartLen){
+
+				dotwalkfieldname = dotwalkfieldname + scriptPart;
+				j++;
+				scriptPart = scriptArray[loc[0]][parseInt(loc[1]) + varNameLen + j];
+
+			}
+			if(tableName.includes('+')){
+				gs.info("Found a Tablename with +. Tablename="+tableName + ' and a Dotwalkfieldname of: ' + dotwalkfieldname);
+			}
+			
+
+			if(new x_sigh_technik.AnalyseUtils()._isValidDotwalkfieldname(dotwalkfieldname)){
+				
+				
+				
+
+				var refTableName = new x_sigh_technik.AnalyseUtils().getRefTableFromDotwalk(tableName, dotwalkfieldname);
+				var origVar = varName.split('.');
+
+				var obj = {
+					origVar: origVar[0],
+					varName: varName + "." + dotwalkfieldname,
+					tableName: tableName,
+					fieldName: dotwalkfieldname,
+					refTableName: refTableName,
+					scriptsysid: scriptsysid,
+					scripttype: scripttype
+				};
+
+				//gs.info('Created obj in getDotwalkTables: origVar=' + obj.origVar + ', varName='+obj.varName + ', tableName='+obj.tableName+', fieldName='+obj.fieldName+', refTableName='+refTableName);
+
+
+				arr.push(obj);  //Ergebnis in Returnarray legen
+
+				//Rekursiver Aufruf falls Punkt am Ende gefunden wurde (->weiterer Dotwalk erwartet)
+				if(scriptPart == '.'){
+					//gs.info('scriptPart is \"' + scriptPart + '\" so we call getDotwalkTables recursivly with obj.varName='+obj.varName+" and obj.refTableName="+obj.refTableName);
+
+					var answer = [];
+					answer = new x_sigh_technik.AnalyseUtils().getDotwalkTables(script, obj.varName, obj.refTableName, scriptsysid, scripttype);
+
+
+					//Verarbeiten Rekursiver Ergebnisse
+					for(var c = 0; c < answer.length; c++){
+						//gs.info('roflkartoffel: ' + answer[c].varName);
+						arr.push(answer[c]);
+					} 
+				}
+			}
+
+			/*
+			if(dotwalkfieldname != 'get' && dotwalkfieldname != 'addQuery' && dotwalkfieldname != 'addParam' && dotwalkfieldname != 'query' &&  dotwalkfieldname != 'hasNext' && dotwalkfieldname != 'next'){
+
+				var obj1 = {
+					tableName: array[i].tableName,
+					varName: array[i].varName,
+					dotwalkfieldname: dotwalkfieldname
+				};
+				retVal.push(obj1);
+			}
+			*/
+		});
+
+		return arr;
+	},
+
+	getRefTableFromDotwalk: function(tableName, dotwalkfieldname){
+		//Expects a tableName and dotwalkfieldname
+		//Returns the name of the table referenced by tableName.dotwalkfieldname
+
+		var refTableName = '';
+		var gr = new GlideRecord('sys_dictionary');
+		gr.addQuery('name', tableName); //table name		
+		gr.addQuery('element', dotwalkfieldname); //column name
+		gr.addQuery('internal_type', 'Reference');
+		gr.query();
+		if(gr.next()){
+			refTableName = gr.reference;
+		}
+
+		return refTableName;	
+
+	},
+
+	arrayfyScript: function(script){
+		//Expects a script (string)
+		//Returns an Array of the scripts parts, separated by ';' AND '.next()' AND '#'
+
+		retArr = [];
+		retArr = script.toString().split(';').join('#').split('.next()').join('#').split('#');
+
+		return retArr;	
+	},
+
+	_isValidDotwalkfieldname: function(dotwalkfieldname){
+		//Expects a dotwalkfieldname
+		//Returns true if it might me a real Dotwalkfield
+		//Returns false if the string in dotwlakfieldname is a known method of gliderecord like .query() or .addParam()
+
+		var forbiddenArr = ["get", "addQuery", "addParam", "query", "hasNext", "next", "getValue", "orderBy", "orderByDesc", "addActiveQuery", "addEncodedQuery", "addFunction", "addJoinQuery", "addNotNullQuery", "addNullQuery", "canCreate", "canDelete", "canRead", "canWrite", "chooseWindow", "deleteMultiple", "deleteRecord", "getAttribute", "getClassDisplayValue", "getDisplayValue", "getED", "getElement", "getEncodedQuery", "getLabel", "getLastErrorMessage", "getLink", "getRecordClassName", "getRowCount", "getTableName", "getUniqueValue", "insert", "initialize", "isActionAborted", "isNewRecord", "isValid", "isValidField", "isValidRecord", "newRecord", "operation", "setAbortAction", "setLimit", "setNewGuidValue", "setValue", "setWorkflow", "update", "updateMultiple", "toString"];
+		if(forbiddenArr.indexOf(dotwalkfieldname) != -1){
+			//gs.info(dotwalkfieldname + ' is NOT a valid dotwalkfieldname');
+			return false;
+		}
+		//gs.info(dotwalkfieldname + ' is a valid dotwalkfieldname');
+		return true;	
+	},
+
+	type: 'AnalyseUtils'
+});]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2018-04-25 12:03:59</sys_created_on>
+        <sys_id>67e37d7b4fa11300b1350fbf9310c78a</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>AnalyseUtils</sys_name>
+        <sys_package display_value="Technikanalyse" source="x_sigh_technik">ca8ead33dbedd700a9c066a25b961937</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="Technikanalyse">ca8ead33dbedd700a9c066a25b961937</sys_scope>
+        <sys_update_name>sys_script_include_67e37d7b4fa11300b1350fbf9310c78a</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2018-04-25 12:03:59</sys_updated_on>
+    </sys_script_include>
+</record_update>
